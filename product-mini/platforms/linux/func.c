@@ -1,19 +1,16 @@
 #include <stdint.h>
+#include <stdio.h>
 
-typedef void (*Tfunc)(uint32_t);
-
+__attribute__((used)) __attribute__((export_name("print_num")))
 void print_num(uint32_t x) {
+    printf("you gave me = %d\n", x);
 }
 
-Tfunc function = print_num;
+// Force print_num into the table
+__attribute__((used))
+void (*force_table_entry)(uint32_t) = print_num;
 
-#ifdef __wasm__
-#define WASM_EXPORT(NAME) __attribute__((export_name(NAME)))
-#else
-#define WASM_EXPORT(NAME)
-#endif
-
-WASM_EXPORT("addr")
-uint32_t addr() {
-    return (uint32_t)(uintptr_t)&function;
+__attribute__((export_name("addr")))
+uint32_t addr(void) {
+    return 1; 
 }
