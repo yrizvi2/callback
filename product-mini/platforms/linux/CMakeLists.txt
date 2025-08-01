@@ -162,7 +162,13 @@ endif ()
 
 include (${SHARED_DIR}/utils/uncommon/shared_uncommon.cmake)
 
-add_executable (iwasm main.c ${UNCOMMON_SHARED_SOURCE})
+add_executable (iwasm 
+  ${CMAKE_CURRENT_SOURCE_DIR}/main.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/callback_shim.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/func.c
+  ${UNCOMMON_SHARED_SOURCE}
+)
+
 
 set_version_info (iwasm)
 

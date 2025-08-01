@@ -13,6 +13,7 @@
 #include "bh_platform.h"
 #include "bh_read_file.h"
 #include "wasm_export.h"
+#include "../linux/callback_shim.h"
 
 #if WASM_ENABLE_LIBC_WASI != 0
 #include "../common/libc_wasi.c"
@@ -968,35 +969,12 @@ main(int argc, char *argv[])
         goto fail3;
     }
 
-    /* Callback Logic */
-    typedef void (*Tfunc)(uint32_t);
-    wasm_exec_env_t callback_exec_env = wasm_runtime_create_exec_env(wasm_module_inst, stack_size);
-    if (!callback_exec_env) {
-        printf("Failed to create exec environment.\n");
+    /* Shim Callback Logic */
+    if (!call_callback_by_name(wasm_module_inst, stack_size, 42)) {
+        printf("Callback failed.\n");
         goto fail3;
     }
 
-    wasm_function_inst_t addr_func = wasm_runtime_lookup_function(wasm_module_inst, "addr");
-    if (!addr_func) {
-        printf("Function 'addr' not found.\n");
-        goto fail3;
-    }
-
-    uint32_t results[1] = {0};
-    if (!wasm_runtime_call_wasm(callback_exec_env, addr_func, 0, results)) {
-        printf("Error invoking 'addr': %s\n", wasm_runtime_get_exception(wasm_module_inst));
-        goto fail3;
-    }
-
-    uint32_t func_index = results[0];
-    printf("Got function index from Wasm: %u\n", func_index);
-
-    uint32_t params[1] = {42};
-    if (!wasm_runtime_call_indirect(callback_exec_env, func_index, 1, params)) {
-        printf("Indirect call failed: %s\n", wasm_runtime_get_exception(wasm_module_inst));
-    } else {
-        printf("Indirect call succeeded.\n");
-    }
 
     
 #if WASM_CONFIGURABLE_BOUNDS_CHECKS != 0
@@ -1088,7 +1066,7 @@ fail5:
 fail4:
 #endif
     /* destroy the module instance */
-    wasm_runtime_destroy_exec_env(callback_exec_env);
+    //wasm_runtime_destroy_exec_env(callback_exec_env);
     wasm_runtime_deinstantiate(wasm_module_inst);
 
 fail3:
